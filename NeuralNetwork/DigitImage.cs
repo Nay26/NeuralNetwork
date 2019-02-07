@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace NeuralNetwork
 {
 
+    //Prints a representation of the handwritten caharcter and it's corresponding label.
     public class DigitImage
     {
         public byte[][] pixels;
@@ -59,7 +60,7 @@ namespace NeuralNetwork
             }
             s += this.label.ToString();
             return s;
-        } // ToString
+        }
     }
 
 }

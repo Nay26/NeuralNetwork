@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace NeuralNetwork
 {
+    //The Neural Network Object
     class NeuralNetwork
     {
+        // Contains a list of Layers.
         List<Layer> layers;
 
         double maxStartWeight;
@@ -36,6 +38,7 @@ namespace NeuralNetwork
 
         }
 
+        // On initialisation create the layer list of layers.
         public void InitialiseNetwork()
         {
             Layer inputLayer = new Layer(inputLayerSize, hiddenLayerSize);
@@ -54,6 +57,7 @@ namespace NeuralNetwork
             layers.Add(outputLayer);
         }
 
+        // Setting the input layer node values that correspond to the darkness of the pixels of the training image
         public void InitialiseInputs(byte[][] pixels)
         {
             inputLayerInputs = new double[inputLayerSize];
@@ -66,21 +70,19 @@ namespace NeuralNetwork
                     if (pixels[i][j] == 0)
                     {
                         inputLayerInputs[count] = 0;
-
                     }
                     else
                     {
                         tempInput = (pixels[i][j]);
                         inputLayerInputs[count] = tempInput / 255;
-
                     }
-
                     count++;
                 }
             }
             layers[0].nodeOutput = inputLayerInputs;
         }
 
+        // Generate the start weights for each layer in the layer list
         public void InitialiseWeights()
         {
             foreach (Layer layer in layers)
@@ -89,19 +91,19 @@ namespace NeuralNetwork
             }
         }
 
+        // The simple forward propogation algorithm that runs the input values through the network to return an output of what the network thinks the image is.
         public void ForwardPropogate()
         {
-            for (int k = 0; k < layers.Count; k++)
+            
+            for (int k = 0; k < layers.Count; k++) // For each layer
             {
-                for (int i = 0; i < layers[k].nodeNumber; i++)
+                for (int i = 0; i < layers[k].nodeNumber; i++) // For each node in that layer
                 {
-                    if (k > 0)
+                    if (k > 0) // If Not Input Layer ie: one step done, run the activation function and add the bias before calculating the next layers outputs.
                     {
                         layers[k].nodeOutput[i] = SigmoidFunction((layers[k].nodeOutput[i]) + layers[k].nodeBias[i]);
                     }
-
-
-                    for (int j = 0; j < layers[k].nextLayerNodeNumber; j++)
+                    for (int j = 0; j < layers[k].nextLayerNodeNumber; j++) // For each node in the next layer calculate it's output as the sum of all the weights going into it * thier input values.
                     {
                         layers[k + 1].nodeOutput[j] += layers[k].weight[i, j] * layers[k].nodeOutput[i];
                     }
@@ -109,6 +111,7 @@ namespace NeuralNetwork
             }
         }
 
+        // Sigmoid Activation Function is used in this network, derivative function is needed for backpropogation step
         public double SigmoidFunction(double x)
         {
             return 1 / (1 + (Math.Pow(Math.E, -x)));
@@ -119,6 +122,7 @@ namespace NeuralNetwork
             return x * (1 - x);
         }
 
+        // Backpropogation Algorithm (Only working for one hidden Layer)
         public void BackPropogate(int actual)
         {
             CalculateActivationDerivatives();
@@ -138,6 +142,35 @@ namespace NeuralNetwork
             }         
 
             AdjustWeights();
+        }
+
+        public void CalculateActivationDerivatives()
+        {
+            for (int l = 0; l < layers.Count; l++)
+            {
+                for (int n = 0; n < layers[l].nodeNumber; n++)
+                {
+                    layers[l].activationDerivative[n] = DerivSigmoid(layers[l].nodeOutput[n]);
+
+                }
+            }
+        }
+
+        public void CalculateOutputErrorDerivative(int actual)
+        {
+            deltaArray = new double[outputLayerSize];
+
+            for (int i = 0; i < deltaArray.Length; i++)
+            {
+                if (actual == i)
+                {
+                    deltaArray[i] = (1 - layers[layers.Count - 1].nodeOutput[i]);
+                }
+                else
+                {
+                    deltaArray[i] = (0 - layers[layers.Count - 1].nodeOutput[i]);
+                }
+            }
         }
 
         public double ExtraBit(int layer, int fn, int bn)
@@ -202,6 +235,7 @@ namespace NeuralNetwork
 
         }
 
+        // Printing the network for test purposes.
         internal void PrintNetwork()
         {
             for (int i = 0; i < layers[layers.Count - 1].nodeNumber; i++)
@@ -210,6 +244,7 @@ namespace NeuralNetwork
             }
         }
 
+        // Is the output of the network equal to the actual image?
         public Boolean IsOutputCorrect(byte actual)
         {
             if (OutputValue() == actual)
@@ -222,11 +257,7 @@ namespace NeuralNetwork
             }
         }
 
-        public void GetTotalError()
-        {
-
-        }
-
+        // Calculate what the network thinks the output value is.
         public int OutputValue()
         {
             double max = -100;
@@ -243,34 +274,7 @@ namespace NeuralNetwork
             return maxNodeNum;
         }
 
-        public void CalculateActivationDerivatives()
-        {
-            for (int l = 0; l < layers.Count; l++)
-            {
-                for (int n = 0; n < layers[l].nodeNumber; n++)
-                {
-                    layers[l].activationDerivative[n] = DerivSigmoid(layers[l].nodeOutput[n]);
-
-                }
-            }
-        }
-
-        public void CalculateOutputErrorDerivative(int actual)
-        {
-            deltaArray = new double[outputLayerSize];
-
-            for (int i = 0; i < deltaArray.Length; i++)
-            {
-                if (actual == i)
-                {
-                    deltaArray[i] = (1 - layers[layers.Count - 1].nodeOutput[i]);
-                }
-                else
-                {
-                    deltaArray[i] = (0 - layers[layers.Count - 1].nodeOutput[i]);
-                }
-            }
-        }
+        
     }
 }
 
